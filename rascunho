@@ -1,0 +1,69 @@
+import java.util.ArrayList;
+import java.util.List;
+
+class Hotel {
+    private final int numQuartos = 10;
+    private final int numHospedes = 50;
+    private final int numCamareiras = 10;
+    private final int numRecepcionistas = 5;
+
+    private final BlockingQueue<Quarto> quartosDisponiveis;
+    private final List<Thread> threadsCamareira;
+    private final List<Thread> threadsHospede;
+    private final List<Thread> threadsRecepcionista;
+    private final List<Hospede> hospedesEsperando;
+
+    public Hotel() {
+        quartosDisponiveis = new ArrayBlockingQueue<>(numQuartos);
+        threadsCamareira = new ArrayList<>();
+        threadsHospede = new ArrayList<>();
+        threadsRecepcionista = new ArrayList<>();
+        hospedesEsperando = new ArrayList<>();
+
+        for (int i = 0; i < numQuartos; i++) {
+            quartosDisponiveis.add(new Quarto(i + 1));
+        }
+
+        for (int i = 0; i < numCamareiras; i++) {
+            Thread threadCamareira = new Thread(new Camareira("Camareira-" + (i + 1), this));
+            threadsCamareira.add(threadCamareira);
+            threadCamareira.start();
+        }
+
+        for (int i = 0; i < numRecepcionistas; i++) {
+            Thread threadRecepcionista = new Thread(new Recepcionista("Recepcionista-" + (i + 1), this));
+            threadsRecepcionista.add(threadRecepcionista);
+            threadRecepcionista.start();
+        }
+
+        for (int i = 0; i < numHospedes; i++) {
+            Thread threadHospede = new Thread(new Hospede("Hospede-" + (i + 1), this));
+            threadsHospede.add(threadHospede);
+            threadHospede.start();
+        }
+    }
+
+    public Quarto getQuartoDisponivel() throws InterruptedException {
+        return quartosDisponiveis.take();
+    }
+
+    public void retornarQuarto(Quarto quarto) throws InterruptedException {
+        quartosDisponiveis.put(quarto);
+    }
+
+    public synchronized void adicionarHospedeEsperando(Hospede hospede) {
+        hospedesEsperando.add(hospede);
+    }
+
+    public synchronized void removerHospedeEsperando(Hospede hospede) {
+        hospedesEsperando.remove(hospede);
+    }
+
+    public synchronized List<Hospede> getHospedesEsperando() {
+        return new ArrayList<>(hospedesEsperando);
+    }
+}
+
+
+    }
+}
